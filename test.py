@@ -126,10 +126,10 @@ def main():
         con_gt = outputs["con_gt"].squeeze()
         sty_gt = outputs["sty_gt"].squeeze()
 
-        rec = rec.numpy().cpu() * std + mean
-        tra = tra.numpy().cpu() * std + mean
-        con_gt = con_gt.numpy().cpu() * std + mean
-        sty_gt = sty_gt.numpy().cpu() * std + mean
+        rec = rec.cpu().numpy() * std + mean
+        tra = tra.cpu().numpy() * std + mean
+        con_gt = con_gt.cpu().numpy() * std + mean
+        sty_gt = sty_gt.cpu().numpy() * std + mean
 
         tra_root = cnt_root
 

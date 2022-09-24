@@ -109,8 +109,8 @@ venv.bak/
 .idea/
 
 # data
-datasets/
-database/
+datasets
+database
 
 # model
 model_ours
