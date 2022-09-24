@@ -124,7 +124,7 @@ def main():
     sty_motion_arm = torch.from_numpy(sty_motion_arm[np.newaxis].astype('float32'))
 
     # Trainer
-    trainer = Trainer(cfg)
+    trainer = Trainer(cfg, "test")
     epochs = trainer.load_checkpoint()
     trainer.gen_ema.eval()
     

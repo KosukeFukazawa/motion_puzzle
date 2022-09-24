@@ -3,6 +3,7 @@ import numpy as np
 import os
 import sys
 import argparse
+import json
 from trainer import Trainer
 sys.path.append('./motion')
 sys.path.append('./etc')
@@ -103,7 +104,7 @@ def main():
     sty_motion = torch.from_numpy(sty_motion[np.newaxis].astype('float32'))
 
     # Trainer
-    trainer = Trainer(cfg)
+    trainer = Trainer(cfg, "test")
     epochs = trainer.load_checkpoint()
     
     # for bvh
@@ -125,10 +126,10 @@ def main():
         con_gt = outputs["con_gt"].squeeze()
         sty_gt = outputs["sty_gt"].squeeze()
 
-        rec = rec.numpy()*std + mean
-        tra = tra.numpy()*std + mean
-        con_gt = con_gt.numpy()*std + mean
-        sty_gt = sty_gt.numpy()*std + mean
+        rec = rec.numpy().cpu() * std + mean
+        tra = tra.numpy().cpu() * std + mean
+        con_gt = con_gt.numpy().cpu() * std + mean
+        sty_gt = sty_gt.numpy().cpu() * std + mean
 
         tra_root = cnt_root
 
@@ -161,10 +162,14 @@ def main():
                 BVH.save(file_path, anim, names, frametime=1.0/60.0)
 
         for key in loss_test_dict.keys():
-            loss = loss_test_dict[key]
+            loss = float(loss_test_dict[key].cpu().numpy())
             if key not in loss_test:
                 loss_test[key] = []
             loss_test[key].append(loss)
+        
+        # write loss in json file
+        with open(os.path.join(output_dir, "loss.json"), "w") as f:
+            json.dump(loss_test, f)
 
         log = f'Load epoch [{epochs}], '
         loss_test_avg = dict()

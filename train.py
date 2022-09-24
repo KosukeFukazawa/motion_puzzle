@@ -44,7 +44,7 @@ loader = {'train_src': train_src_loader, 'train_tar': train_tar_loader}
 train_writer = SummaryWriter(os.path.join(config['tb_dir'], 'train'))
 
 # Trainer
-trainer = Trainer(config)
+trainer = Trainer(config, "train")
 tr_info = open(os.path.join(config['info_dir'], "info-network"), "w")
 print(trainer.gen, file=tr_info)
 tr_info.close()

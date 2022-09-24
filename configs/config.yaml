@@ -1,6 +1,9 @@
 # name
 name: 'model_ours'
 
+# gpus
+gpu_ids: [0]
+
 # directory
 data_dir: './datasets/cmu/'
 data_norm_dir: './datasets/cmu/norm'

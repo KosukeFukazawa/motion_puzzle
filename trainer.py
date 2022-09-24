@@ -15,24 +15,31 @@ from radam import RAdam
 
 
 class Trainer(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, mode):
         super(Trainer, self).__init__()
         self.gen = Generator(config['model']['gen'])
         self.gen_ema = copy.deepcopy(self.gen)
 
         self.model_dir = config['model_dir']
         self.config = config
+        self.mode = mode
 
         lr_gen = config['lr_gen']
         gen_params = list(self.gen.parameters())
         self.gen_opt = RAdam([p for p in gen_params if p.requires_grad],
                               lr=lr_gen, weight_decay=config['weight_decay'])
 
-        self.device = 'cpu'
         if torch.cuda.is_available():
-            self.device = torch.cuda.current_device()
-            self.gen = nn.DataParallel(self.gen).to(self.device)
-            self.gen_ema = nn.DataParallel(self.gen_ema).to(self.device)
+            device_ids = config["gpu_ids"]
+            # define main device.
+            self.device = torch.device("cuda:{}".format(device_ids[0]))
+            if mode == "train":
+                self.gen = nn.DataParallel(self.gen, device_ids, self.device)
+                self.gen_ema = nn.DataParallel(self.gen_ema, device_ids, self.device)
+            self.gen.to(self.device)
+            self.gen_ema.to(self.device)
+        else:
+            self.device = "cpu"
 
     def train(self, loader, wirter):
         config = self.config
@@ -160,8 +167,15 @@ class Trainer(nn.Module):
             model_path = get_model_list(model_dir, "gen")   # last model
 
         state_dict = torch.load(model_path, map_location=self.device)
-        self.gen.load_state_dict(state_dict['gen'])
-        self.gen_ema.load_state_dict(state_dict['gen_ema'])
+        if hasattr(self.gen, "module"):
+            self.gen.module.load_state_dict(state_dict["gen"])
+        else:
+            self.gen.load_state_dict(state_dict["gen"])
+        
+        if hasattr(self.gen_ema, "module"):
+            self.gen.module.load_state_dict(state_dict["gen_ema"])
+        else:
+            self.gen.load_state_dict(state_dict["gen_ema"])
 
         epochs = int(model_path[-6:-3])
         print('Load from epoch %d' % epochs)
